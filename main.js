@@ -2,16 +2,19 @@ import axios from 'axios';
 let dependencyCache=new Map();
 let versionCache=new Map();
 const options={method: 'GET',timeout: 25000};
+
 function stringify(a){
-   
     return a.join('@#$%');
 }
+
 function destringify(a){
     return a.split('@#$%');
 }
+
 function removePrefix(version){
-  return version.split(/=|~|=|<|>/).join('').split('^').join('');
-} 
+  return version.split(/=|~|=|<|>/).join('').split('^').join('').replace('x','0');
+
+}
 
  function directDependency(packageName,packageVersion){
     return new Promise(async (resolve,reject)=>{
@@ -29,7 +32,7 @@ if (data.dependencies) {
 })
   
 
-    }
+}
 
 async function getDirectDependencies(packageName,packageVersion){
     
@@ -46,6 +49,7 @@ async function getDirectDependencies(packageName,packageVersion){
    
     
 }
+
 async function getAllDependencies(packageName,packageVersion){
     return new Promise(async (resolve,reject)=>{
     let alldependencies=new Set();
@@ -71,30 +75,28 @@ async function extractVersions(packageName){
         resolve(versions);
     })
 }
+
 async function getver(packageName){
     return new Promise(async (resolve,reject)=>{
     
-    if(versionCache.has(`${packageName}`)){
-        resolve (versionCache.get(`${packageName}`));
-    }
-    let out= await extractVersions(packageName);  
-    versionCache.set(`${packageName}`,out);
-    resolve(out);  
-})
+        if(versionCache.has(`${packageName}`)){
+            resolve (versionCache.get(`${packageName}`));
+        }
+        let out= await extractVersions(packageName);  
+        versionCache.set(`${packageName}`,out);
+        resolve(out);  
+    })
 }
-let rootPackageName='react-use';
-let rootPackageVersion='10.0.0';
-async function mainfun(dependencyName,dependencyDestinationVersion){
+
+async function mainfun(rootPackageName,rootPackageVersion,dependencyName,dependencyDestinationVersion){
     let rootPackageVersions = await getver(rootPackageName);
     let dependencyVersions = await getver(dependencyName);
-    
-    
     let inverseRootPackageVersions =new Map();
     let inverseDependencyVersions=new Map();
     rootPackageVersions.forEach((item,idx)=>inverseRootPackageVersions.set(item,idx));
     dependencyVersions.forEach((item,idx)=>inverseDependencyVersions.set(item,idx));
     let rootVersionCount = rootPackageVersions.length;
-    let rootindex=rootVersionCount-1,bit=1<<10,last=-1;
+    let rootindex=rootVersionCount-1,bit=1<<20,last=-1;
   
     
     while(1){
@@ -108,18 +110,34 @@ async function mainfun(dependencyName,dependencyDestinationVersion){
         }
         bit/=2;
         if(bit<1){
+            return new Promise((resolve,reject)=>{
             if(last==dependencyDestinationVersion){
-                console.log(`upgrade to ${rootPackageVersions[rootindex]}`);
+                resolve(`${rootPackageVersions[rootindex]}`);
             }
             else {
-                console.log('no favourable outcome')
+                reject('no favourable outcome');
             }
-             break;   
+        })
         }   
     }
 }
-mainfun('throttle-debounce','3.0.1');
+
 //**********************************************************************************************************************************//
+
+
+async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersion){
+    let promiseList = mainPackages.map((item)=>
+        mainfun(item[0],item[1],dependencyName,dependencyDestinationVersion)
+    );
+    Promise.all(promiseList).then((versions)=>{
+       
+        versions.forEach((item,indx)=>{
+            console.log(`upgrade ${mainPackages[indx][0]} to ${item}`)});
+        }).catch(()=>console.log('not possible'))
+    }
+let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
+listUpdate(mainPackages,'throttle-debounce','3.0.1');
+
 
 
 
