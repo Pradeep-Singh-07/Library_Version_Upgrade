@@ -1,5 +1,6 @@
 {
   "dependencies": {
-    "npm-api": "^1.0.1"
+    "npm-api": "^1.0.1",
+    "yarn": "^1.22.19"
   }
 }
