@@ -1,4 +1,5 @@
 {
+  "type" : "module",
   "dependencies": {
     "npm-api": "^1.0.1",
     "npm-remote-ls": "^1.3.2",

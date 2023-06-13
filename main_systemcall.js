@@ -1,36 +1,40 @@
-import axios from 'axios';
+import exec from 'child_process';
+function cleanup(out){
+    out=out.slice(1,-2);
+    let arr =out.split("'").join("")
+                .split('\n').join('')
+                .split(' ').join('')
+                .split('^').join('')
+                .split('~').join('')
+                .split('<').join('')
+                .split('=').join('')
+                .split('>').join('')
+                .split('|').join('')
+                .split(',');
+    arr=arr.map((item)=>item.split(':'));
+    if(arr.length==1 && arr[0]=='')arr=[];
+    return arr;
+}
 let dependencyCache=new Map();
 let versionCache=new Map();
-const options={method: 'GET',timeout: 25000};
 function stringify(a){
-   
     return a.join('@#$%');
 }
 function destringify(a){
     return a.split('@#$%');
 }
-function removePrefix(version){
-  return version.split(/=|~|=|<|>/).join('').split('^').join('');
-} 
-
+let x=1;
  function directDependency(packageName,packageVersion){
-    return new Promise(async (resolve,reject)=>{
-        let response;
-        if(packageVersion.length>1)response = await axios.get(`https://registry.npmjs.org/${packageName}/${packageVersion}`,options);
-        else response = await axios.get(`https://registry.npmjs.org/${packageName}`,options);
-let data=response.data;
-if (data.dependencies) {
-    const dependencies = Object.entries(data.dependencies);
-    const dependenciesWithVersions = dependencies.map(([name, version]) => [name,removePrefix(version)]);
-    resolve(dependenciesWithVersions);
-  } else {
-    resolve([]);
-  }
-})
-  
-
-    }
-
+    return new Promise((resolve,reject)=>{
+        console.log(`called${x++}`)
+        exec.exec(`npm view ${packageName}@${packageVersion} dependencies`,(err,out)=>{
+            if(err)throw err;
+            let result = cleanup(out);
+            
+            resolve(result);
+        });
+    })
+}
 async function getDirectDependencies(packageName,packageVersion){
     
     return new Promise(async (resolve,reject)=>{
@@ -61,14 +65,14 @@ async function getAllDependencies(packageName,packageVersion){
     }
     resolve([...alldependencies].map((item)=>destringify(item)));})
 }
-
 async function extractVersions(packageName){
-    return new Promise(async(resolve,reject)=>{
-        const response = await axios.get(`https://registry.npmjs.org/${packageName}`,options);
-       
-        const data = response.data;
-        const versions = Object.keys(data.versions);
-        resolve(versions);
+    return new Promise((resolve,reject)=>{
+        console.log(`called${x++}`)
+        exec.exec(`npm view ${packageName} versions`,(err,out)=>{
+            out=out.slice(1,-2).split(' ').join('').split('\n').join('').split("'").join('').split(',');
+            if(err)throw err;
+            resolve(out);
+        })
     })
 }
 async function getver(packageName){
@@ -84,6 +88,7 @@ async function getver(packageName){
 }
 let rootPackageName='react-use';
 let rootPackageVersion='10.0.0';
+
 async function mainfun(dependencyName,dependencyDestinationVersion){
     let rootPackageVersions = await getver(rootPackageName);
     let dependencyVersions = await getver(dependencyName);
@@ -95,8 +100,8 @@ async function mainfun(dependencyName,dependencyDestinationVersion){
     dependencyVersions.forEach((item,idx)=>inverseDependencyVersions.set(item,idx));
     let rootVersionCount = rootPackageVersions.length;
     let rootindex=rootVersionCount-1,bit=1<<10,last=-1;
+   
   
-    
     while(1){
         if(rootindex-bit>0){
             let allcurrentdependencies=await getAllDependencies(rootPackageName,rootPackageVersions[rootindex-bit]);
@@ -114,14 +119,16 @@ async function mainfun(dependencyName,dependencyDestinationVersion){
             else {
                 console.log('no favourable outcome')
             }
-             break;   
-        }   
+             break;
+            
+            
+        }
+        
     }
+
 }
 mainfun('throttle-debounce','3.0.1');
-//**********************************************************************************************************************************//
-
-
+//
 
 
 
