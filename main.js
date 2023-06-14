@@ -3,12 +3,12 @@ let dependencyCache=new Map();
 let versionCache=new Map();
 const options={method: 'GET',timeout: 25000};
 
-function stringify(a){
-    return a.join('@#$%');
+function stringify(array){
+    return array.join('@#$%');
 }
 
-function destringify(a){
-    return a.split('@#$%');
+function destringify(string){
+    return string.split('@#$%');
 }
 
 function removePrefix(version){
@@ -20,12 +20,12 @@ function removePrefix(version){
     return new Promise(async (resolve,reject)=>{
         let response;
         if(packageVersion.length>1)response = await axios.get(`https://registry.npmjs.org/${packageName}/${packageVersion}`,options);
-        else response = await axios.get(`https://registry.npmjs.org/${packageName}`,options);
-let data=response.data;
-if (data.dependencies) {
-    const dependencies = Object.entries(data.dependencies);
-    const dependenciesWithVersions = dependencies.map(([name, version]) => [name,removePrefix(version)]);
-    resolve(dependenciesWithVersions);
+        else response = await axios.get(`https://registry.npmjs.org/${packageName}`,options);             
+    let data=response.data;
+    if (data.dependencies) {
+        const dependencies = Object.entries(data.dependencies);
+        const dependenciesWithVersions = dependencies.map(([name, version]) => [name,removePrefix(version)]);
+        resolve(dependenciesWithVersions);
   } else {
     resolve([]);
   }
@@ -40,7 +40,7 @@ async function getDirectDependencies(packageName,packageVersion){
     let Package=[packageName,packageVersion];
     if(dependencyCache.has(stringify(Package))){
 
-        resolve(  dependencyCache.get(stringify(Package)));
+        resolve(dependencyCache.get(stringify(Package)));
     }
     let result = await directDependency(packageName,packageVersion);
     dependencyCache.set(stringify(Package),result);
@@ -53,15 +53,15 @@ async function getDirectDependencies(packageName,packageVersion){
 async function getAllDependencies(packageName,packageVersion){
     return new Promise(async (resolve,reject)=>{
     let alldependencies=new Set();
-    let stack=[[packageName,packageVersion]];
-    while(stack.length){
-        stack.forEach((item)=>{alldependencies.add(stringify(item));})
-        let stack2=[];
-        stack=stack.map((item)=>getDirectDependencies(item[0],item[1]));
-         stack = await Promise.all(stack);
-        stack.forEach((item)=>stack2.push(...item));
-        stack2.filter((item)=>!alldependencies.has(stringify(item)));
-        stack=stack2;
+    let newPackages=[[packageName,packageVersion]];
+    while(newPackages.length){
+        newPackages.forEach((item)=>{alldependencies.add(stringify(item));})
+        let newPackages_temp=[];
+        newPackages=newPackages.map((item)=>getDirectDependencies(item[0],item[1]));
+        newPackages = await Promise.all(newPackages);
+        newPackages.forEach((items)=>newPackages.push(...items));
+        newPackages_temp.filter((item)=>!alldependencies.has(stringify(item)));
+        newPackages=newPackages_temp;
     }
     resolve([...alldependencies].map((item)=>destringify(item)));})
 }
@@ -133,7 +133,9 @@ async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersi
        
         versions.forEach((item,indx)=>{
             console.log(`upgrade ${mainPackages[indx][0]} to ${item}`)});
+
         }).catch(()=>console.log('not possible'))
+       
     }
 let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
 listUpdate(mainPackages,'throttle-debounce','3.0.1');
