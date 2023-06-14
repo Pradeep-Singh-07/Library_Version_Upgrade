@@ -138,10 +138,42 @@ async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersi
        
     }
 let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
-listUpdate(mainPackages,'throttle-debounce','3.0.1');
+// listUpdate(mainPackages,'throttle-debounce','3.0.1');
 
-
-
+//***********************************************************************************************************************************//
+import fs from 'fs';
+import lockfile from '@yarnpkg/lockfile';
+let file = fs.readFileSync('yarn.lock','utf8');
+let json = lockfile.parse(file);
+let dependencyGraph=[];
+function seprateNameAndVersion(packageName){
+  return packageName= packageName.split("").reverse().join("").replace('@',' ').split("").reverse().join("").split(' ');
+}
+for (const key1 in json.object){
+  let packageDependencies=[];
+  for (const key2 in json.object[key1][`dependencies`]){
+    packageDependencies.push([key2,json.object[key1][`dependencies`][key2]]);
+  }
+  dependencyGraph.push([seprateNameAndVersion(key1),packageDependencies]);
+}
+function getDirectDependents(packageName){
+    return dependencyGraph.filter((array)=>array[1].filter((item)=>`${item[0]}@${item[1]}`==packageName).length)
+                                                   .map((array)=>array[0]);
+}
+function getAllDependents(packageName){
+  let allDependents=new Set();
+  let newDependents=[packageName];
+  while(newDependents.length){
+    allDependents.add(...newDependents);
+    let newDependents_temp=[];
+    newDependents.forEach((Package)=>{
+        newDependents_temp.push(...getDirectDependents(Package));
+    })
+    newDependents=newDependents_temp.filter((Package)=>!allDependents.has(stringify(Package))).map(([name,version])=>`${name}@${version}`);
+  }
+  return [...allDependents];
+}
+console.log(getAllDependents('safer-buffer@~2.1.0'));
 
 
 
