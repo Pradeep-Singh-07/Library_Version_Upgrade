@@ -1,3 +1,4 @@
+import { execSync } from 'child_process';
 import axios from 'axios';
 let dependencyCache=new Map();
 let versionCache=new Map();
@@ -15,8 +16,42 @@ function removePrefix(version){
   return version.split(/=|~|=|<|>/).join('').split('^').join('').replace('x','0');
 
 }
+//***********************************************************************************************************************************//
+function getDependencyPaths(packageName) {
+  const command = `yarn why ${packageName} `;
+  let output = execSync(command, { encoding: 'utf-8' });
+  output=output.trim();
+  const lines = output.split('\n');
+  const allDependencyPaths = [];
 
- function directDependency(packageName,packageVersion){
+  let currentReason = null;
+  for (let line of lines) {
+    line = line.trim();
+    
+    if(line.startsWith('- Hoisted from')){
+        let dependencyPath_temp=line.replace('- Hoisted from','').trim().slice(1,-1).split('#');
+        let lastDependency="";
+        let dependencyPath=[];
+        dependencyPath_temp.forEach((item)=>{
+            if(item.startsWith('@')){
+                lastDependency=item;
+            }
+            else if(lastDependency){
+                dependencyPath.push(lastDependency+'/'+item);
+                lastDependency="";
+            }
+            else{
+                dependencyPath.push(item);
+            }
+        })
+        allDependencyPaths.push(dependencyPath);
+    }
+  }
+  return allDependencyPaths ;
+}
+//***************************************************************************************************************************************//
+
+function directDependency(packageName,packageVersion){
     return new Promise(async (resolve,reject)=>{
         let response;
         if(packageVersion.length>1)response = await axios.get(`https://registry.npmjs.org/${packageName}/${packageVersion}`,options);
@@ -25,13 +60,12 @@ function removePrefix(version){
     if (data.dependencies) {
         const dependencies = Object.entries(data.dependencies);
         const dependenciesWithVersions = dependencies.map(([name, version]) => [name,removePrefix(version)]);
+        
         resolve(dependenciesWithVersions);
   } else {
     resolve([]);
   }
 })
-  
-
 }
 
 async function getDirectDependencies(packageName,packageVersion){
@@ -59,10 +93,11 @@ async function getAllDependencies(packageName,packageVersion){
         let newPackages_temp=[];
         newPackages=newPackages.map((item)=>getDirectDependencies(item[0],item[1]));
         newPackages = await Promise.all(newPackages);
-        newPackages.forEach((items)=>newPackages.push(...items));
+        newPackages.forEach((items)=>newPackages_temp.push(...items));
         newPackages_temp.filter((item)=>!alldependencies.has(stringify(item)));
         newPackages=newPackages_temp;
     }
+    
     resolve([...alldependencies].map((item)=>destringify(item)));})
 }
 
@@ -102,6 +137,7 @@ async function mainfun(rootPackageName,rootPackageVersion,dependencyName,depende
     while(1){
         if(rootindex-bit>0){
             let allcurrentdependencies=await getAllDependencies(rootPackageName,rootPackageVersions[rootindex-bit]);
+            // console.log(allcurrentdependencies);
             let thisdependency=allcurrentdependencies.filter((item)=>item[0]==`${dependencyName}`);
             if(thisdependency.length && Number(inverseDependencyVersions.get(`${thisdependency[0][1]}`))>=Number(inverseDependencyVersions.get(`${dependencyDestinationVersion}`))){
                 rootindex-=bit;
@@ -122,7 +158,7 @@ async function mainfun(rootPackageName,rootPackageVersion,dependencyName,depende
     }
 }
 
-//**********************************************************************************************************************************//
+//*************************************************************************************************************************************************//
 
 
 async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersion){
@@ -134,48 +170,100 @@ async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersi
         versions.forEach((item,indx)=>{
             console.log(`upgrade ${mainPackages[indx][0]} to ${item}`)});
 
-        }).catch(()=>console.log('not possible'))
-       
+        })
+        
     }
-let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
-// listUpdate(mainPackages,'throttle-debounce','3.0.1');
+    // let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
+    // listUpdate(mainPackages,'throttle-debounce','3.0.1');  
+    // import fs from 'fs';
+    // import lockfile from '@yarnpkg/lockfile';
+    // let file = fs.readFileSync('yarn.lock','utf8');
+    // let json = lockfile.parse(file);
+    let dependencyGraph=[];
+    // for (const key1 in json.object){
+    //     let packageDependencies=[];
+    //     for (const key2 in json.object[key1][`dependencies`]){
+    //         packageDependencies.push([key2,json.object[key1][`dependencies`][key2]]);
+    //     }
+    //     dependencyGraph.push([seprateNameAndVersion(key1),packageDependencies]);
+    // }
+    function seprateNameAndVersion(packageName){
+        return packageName= packageName.split("").reverse().join("").replace('@',' ').split("").reverse().join("").split(' ');
+    }
+    function getDirectDependents(packageName){
+        return dependencyGraph.filter((array)=>array[1].filter((item)=>`${item[0]}@${item[1]}`==packageName).length)
+        .map((array)=>array[0]);
+    }
+    function getAllDependents(packageName){
+        let allDependents=new Set();
+        let newDependents=[packageName];
+        while(newDependents.length){
+            allDependents.add(...newDependents);
+            let newDependents_temp=[];
+            newDependents.forEach((Package)=>{
+                newDependents_temp.push(...getDirectDependents(Package));
+            })
+            newDependents=newDependents_temp.filter((Package)=>!allDependents.has(stringify(Package))).map(([name,version])=>`${name}@${version}`);
+        }
+        return [...allDependents];
+    }
+//**********************************************************************************************************************************************//
+async function updateThis(thisPackage,Child,reqVersion){
+    let [thisVersions,childVersions]=await Promise.all([getver(thisPackage),getver(Child)]);
+    let thisVersions_inv=new Map();
+    let childVersions_inv=new Map();
+    thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
+    childVersions.forEach((item,idx)=>childVersions_inv.set(item,idx));
+    let bit=1<<15 , thisIdx=thisVersions.length-1,last=childVersions.length-1;
+    while(bit>1){
+        if(thisIdx-bit>=0){
+            let thisDirectDependencies=await getDirectDependencies(thisPackage,thisVersions[thisIdx-bit]);
+            thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${Child}`);
+            if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
+                thisIdx-=bit;
+                last=thisDirectDependencies[0][1];
+              
+        }
+    }
+    bit/=2;
+    }
+    if(Number(childVersions_inv.get(last))>=Number(childVersions_inv.get(reqVersion))){
+        return last;
+    }
+    else return '-1';
 
-//***********************************************************************************************************************************//
-import fs from 'fs';
-import lockfile from '@yarnpkg/lockfile';
-let file = fs.readFileSync('yarn.lock','utf8');
-let json = lockfile.parse(file);
-let dependencyGraph=[];
-function seprateNameAndVersion(packageName){
-  return packageName= packageName.split("").reverse().join("").replace('@',' ').split("").reverse().join("").split(' ');
 }
-for (const key1 in json.object){
-  let packageDependencies=[];
-  for (const key2 in json.object[key1][`dependencies`]){
-    packageDependencies.push([key2,json.object[key1][`dependencies`][key2]]);
-  }
-  dependencyGraph.push([seprateNameAndVersion(key1),packageDependencies]);
-}
-function getDirectDependents(packageName){
-    return dependencyGraph.filter((array)=>array[1].filter((item)=>`${item[0]}@${item[1]}`==packageName).length)
-                                                   .map((array)=>array[0]);
-}
-function getAllDependents(packageName){
-  let allDependents=new Set();
-  let newDependents=[packageName];
-  while(newDependents.length){
-    allDependents.add(...newDependents);
-    let newDependents_temp=[];
-    newDependents.forEach((Package)=>{
-        newDependents_temp.push(...getDirectDependents(Package));
+async function listUpdate2(packageName,packageDestinationVersion){
+    let dependencyPaths=getDependencyPaths(packageName);
+    dependencyPaths=dependencyPaths.map((item)=>item.reverse());
+    let Destinations=new Map();
+    dependencyPaths.forEach(async(thisPath)=>{
+        let currChild = "",reqVersion ="";
+        let flag=1;
+        for(let thisPackage of thisPath){
+            if(`${currChild}`==""){
+                currChild=packageName;
+                reqVersion=packageDestinationVersion;
+            }
+            else{
+                let thisVersion=await updateThis(thisPackage,currChild,reqVersion);
+                if(`${thisVersion}`==`-1`){
+                    console.log(`not possible via the following path: ${thisPath}`);
+                    flag=0;
+                    break;
+                }
+                else{
+                    currChild=thisPackage;
+                    reqVersion=thisVersion;   
+                }
+            } 
+
+        }
+        if(flag)
+        console.log(`update ${currChild} to ${reqVersion}`);    
     })
-    newDependents=newDependents_temp.filter((Package)=>!allDependents.has(stringify(Package))).map(([name,version])=>`${name}@${version}`);
-  }
-  return [...allDependents];
-}
-console.log(getAllDependents('safer-buffer@~2.1.0'));
-
-
-
-
-
+}    
+listUpdate2('throttle-debounce','3.0.1');
+    
+    
+    
