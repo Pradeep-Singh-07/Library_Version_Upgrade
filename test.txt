@@ -33,6 +33,7 @@ binary search on path chains: 45.097s
 deep-equal->2.1.0
 update @testing-library/react to 14.0.0
 binary search on path chains: 53.087s
+
 update @testing-library/react to 14.0.0
 linear search on path chains: 38.904s
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -145,3 +146,117 @@ update react-scripts to 5.0.1
 update react-scripts to 5.0.1
 linear search on path chains: 1:45.180 (m:ss.mmm)
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+'magic-string'->'0.26.1'
+update react-scripts to 5.0.0-next.58
+update react-scripts to 5.0.1
+binary search on path chains: 10.103s
+
+update react-scripts to 5.0.0-next.58
+update react-scripts to 5.0.1
+linear search on path chains: 20.785s
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+'camelcase'->'7.0.0'
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+linear search on path chains: 24.452s
+
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+binary search on path chains: 10.329s
+/////////////////////////////////////////////
+svgo->1.3.2
+update react-scripts to 5.0.1
+binary search on path chains: 9.219s
+
+update react-scripts to 5.0.1
+linear search on path chains: 26.395s
+///////////////////////////////////////////////////////////////
+update @jest/console to 29.5.0
+update @jest/types to 29.5.0
+update jest-diff to 29.5.0
+update jest-matcher-utils to 29.5.0
+update jest-message-util to 29.5.0
+update jest-util to 29.5.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.0-next.58
+linear search on path chains: 35.188s
+
+update @jest/console to 29.5.0
+update @jest/types to 29.5.0
+update jest-diff to 29.5.0
+update jest-matcher-utils to 29.5.0
+update jest-message-util to 29.5.0
+update jest-util to 29.5.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update @testing-library/jest-dom to 5.16.5
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.0-next.58
+binary search on path chains: 25.112s
+//////////////////////////////////////////
+leven->4.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+binary search on path chains: 10.727s
+
+
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+linear search on path chains: 18.727s

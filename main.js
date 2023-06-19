@@ -179,7 +179,7 @@ async function updateThis3(thisPackage,currChild,reqVersion){
     let childVersions_inv=new Map();
     thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
     childVersions.forEach((item,idx)=>childVersions_inv.set(item,idx));
-    let major="",minor="",patch="",valid=0,last="";
+    let major="",minor="",patch="",extra="",valid=0,last="";
     
     for(let item of thisVersions){
         item=item.split('.');
@@ -190,14 +190,14 @@ async function updateThis3(thisPackage,currChild,reqVersion){
         
             if(thisDirectDependencies.length)
             if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
-            [major,minor,patch]=item;   
+            [major,minor,patch,extra]=item;   
                 break;
             }
         }
     }
     
     thisVersions=thisVersions.reverse();
-    if(major=="")[major,minor,patch]=thisVersions[0].split('.');
+    if(major=="")[major,minor,patch,extra]=thisVersions[0].split('.');
     for(let item of thisVersions){
         item=item.split('.');
         if(`${item[0]}`==`${major}`){
@@ -208,13 +208,14 @@ async function updateThis3(thisPackage,currChild,reqVersion){
             thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${currChild}`)
             if(thisDirectDependencies.length){
             if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
-                [major,minor,patch]=item;
+                [major,minor,patch,extra]=item;
             }
             else break;
             }
             else break;
         }
     }
+    if(extra)return [major,minor,patch,extra].join('.');
     return [major,minor,patch].join('.');
 }
 async function listUpdate3(packageName,packageDestinationVersion){
@@ -256,7 +257,7 @@ function getDependentsByYarn(packageName){
     let dependents= getDependencyPaths(packageName);
     return dependents.map(item => [item[0]]);
 }  
-// let Package=['semver','7.2.0'];
+// let Package=['leven','4.0.0'];
 // async function doo(x){
 //     console.time('linear search on path chains');
 //     console.time('binary search on path chains');
@@ -279,7 +280,8 @@ function getDependentsByYarn(packageName){
 // });
 // }
 // }
-// doo(2);
+// doo(3);
+
 
 
     
