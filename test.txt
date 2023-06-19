@@ -1,0 +1,147 @@
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+prop-types->15.8.0
+update react-color to 2.19.3
+update react-overlays to 5.2.1
+update react-sortable-hoc to 2.0.0
+update emoji-mart to 5.5.2
+update react-focus-lock to 2.9.4
+update react-transition-group to 4.4.5
+update @apollo/client to 0.0.0-pr-10915-20230616125401
+update react-dropzone to 11.6.0
+update react-player to 2.12.0
+update react-virtualized to 9.22.5
+update react-overlays to 5.2.1
+update apollo-upload-client to 17.0.0
+update react-scripts to 5.0.1
+linear search on path chains: 1:38.939 (m:ss.mmm)
+
+update react-color to 2.19.3
+update react-overlays to 5.2.1
+update react-sortable-hoc to 2.0.0
+update emoji-mart to 5.5.2
+update react-focus-lock to 2.9.4
+update react-transition-group to 4.4.5
+update @apollo/client to 0.0.0-pr-10915-20230616125401
+update react-dropzone to 11.6.0
+update react-player to 2.12.0
+update react-virtualized to 9.22.5
+update react-overlays to 5.2.1
+update apollo-upload-client to 17.0.0
+update react-scripts to 5.0.1
+binary search on path chains: 45.097s
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+deep-equal->2.1.0
+update @testing-library/react to 14.0.0
+binary search on path chains: 53.087s
+update @testing-library/react to 14.0.0
+linear search on path chains: 38.904s
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+get-intrinsic->1.2.1
+update qs to 6.10.3
+update qs to 6.10.3
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update lightship to 7.3.0
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+linear search on path chains: 1:04.766 (m:ss.mmm)
+
+update qs to 6.10.0
+update qs to 6.10.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update lightship to 7.3.0
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.0
+update @testing-library/react to 14.0.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+binary search on path chains: 47.163s
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+es-abstract->1.21.2
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+linear search on path chains: 33.791s
+
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+binary search on path chains: 19.832s
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+semver->7.2.0
+update react-scripts to 5.0.1
+update react-scripts to 5.0.0-next.31
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+binary search on path chains: 42.637s
+
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+update react-scripts to 5.0.1
+linear search on path chains: 1:45.180 (m:ss.mmm)
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

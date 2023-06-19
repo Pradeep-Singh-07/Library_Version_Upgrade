@@ -25,6 +25,7 @@ export async function extractVersions(packageName){
        
         const data = response.data;
         const versions = Object.keys(data.versions);
+        
         resolve(versions);
     })
 }

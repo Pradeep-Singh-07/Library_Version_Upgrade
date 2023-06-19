@@ -38,14 +38,21 @@ async function getAllDependencies(packageName,packageVersion){
     resolve([...alldependencies].map((item)=>destringify(item)));})
 }
 async function getver(packageName){
+
     return new Promise(async (resolve,reject)=>{
-    
+       
         if(versionCache.has(`${packageName}`)){
             resolve (versionCache.get(`${packageName}`));
         }
+        else{
         let out= await extractVersions(packageName);  
+        
+        
         versionCache.set(`${packageName}`,out);
-        resolve(out);  
+        
+      
+        resolve(out); 
+        } 
     })
 }
 
@@ -85,7 +92,9 @@ async function mainfun(rootPackageName,rootPackageVersion,dependencyName,depende
 }
 //*************************************************************************************************************************************************//
 async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersion){
+   
     return new Promise (async (resolve,reject)=>{
+
     let promiseList = mainPackages.map((item)=>
         mainfun(item[0],item[1],dependencyName,dependencyDestinationVersion)
     );
@@ -158,20 +167,27 @@ async function listUpdate2(packageName,packageDestinationVersion){
     })
 }  
 async function updateThis3(thisPackage,currChild,reqVersion){
-    let [thisVersions,childVersions]=await Promise.all([getver(thisPackage),getver(currChild)]);
+    
+    let thisVersions  = [...(await getver(thisPackage))];
+    let childVersions =[...(await getver(currChild))];
+
+    
+    
+    
+
     let thisVersions_inv=new Map();
     let childVersions_inv=new Map();
     thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
     childVersions.forEach((item,idx)=>childVersions_inv.set(item,idx));
-    let major="",minor="",patch="",valid=0,last="",lastv="";
-
+    let major="",minor="",patch="",valid=0,last="";
+    
     for(let item of thisVersions){
         item=item.split('.');
-        
         if(`${item[0]}`!=`${last}`){
             last=`${item[0]}`;
             let thisDirectDependencies = await getDirectDependencies(thisPackage,item.join('.'));
             thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${currChild}`)
+        
             if(thisDirectDependencies.length)
             if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
             [major,minor,patch]=item;   
@@ -181,29 +197,32 @@ async function updateThis3(thisPackage,currChild,reqVersion){
     }
     
     thisVersions=thisVersions.reverse();
+    if(major=="")[major,minor,patch]=thisVersions[0].split('.');
     for(let item of thisVersions){
         item=item.split('.');
         if(`${item[0]}`==`${major}`){
             valid=1;
-
         }
-        else if(valid){
+        if(valid){
             let thisDirectDependencies = await getDirectDependencies(thisPackage,item.join('.'));
             thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${currChild}`)
+            if(thisDirectDependencies.length){
             if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
                 [major,minor,patch]=item;
+            }
+            else break;
             }
             else break;
         }
     }
     return [major,minor,patch].join('.');
-
 }
 async function listUpdate3(packageName,packageDestinationVersion){
     return new Promise(async (resolve,reject)=>{
-    let dependencyPaths=getDependencyPaths(packageName),upgrading=[];
+    let dependencyPaths=getDependencyPaths(packageName);
     dependencyPaths=dependencyPaths.map((item)=>item.reverse());
     Promise.all(dependencyPaths.map(async (thisPath) => new Promise(async (resolve,reject)=>{
+        
         let currChild = "",reqVersion ="";
         let flag=1;
         for(let thisPackage of thisPath){
@@ -232,24 +251,35 @@ async function listUpdate3(packageName,packageDestinationVersion){
 })
 
 
+}
+function getDependentsByYarn(packageName){
+    let dependents= getDependencyPaths(packageName);
+    return dependents.map(item => [item[0]]);
 }  
-async function doo(){
-    console.time('linear search on path chains');
-    console.time('binary search on path chains');
-    console.time('binary search on full graph');
-listUpdate3('throttle-debounce','2.0.1').then((arr)=>{
-    arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
-    console.timeEnd('linear search on path chains');
-});
-// listUpdate2('throttle-debounce','2.0.1').then((arr)=>{
+// let Package=['semver','7.2.0'];
+// async function doo(x){
+//     console.time('linear search on path chains');
+//     console.time('binary search on path chains');
+//     console.time('binary search on full graph');
+// if(x==3){
+// listUpdate3(...Package).then((arr)=>{
+//     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
+//     console.timeEnd('linear search on path chains');
+// });}
+// if(x==2){
+// listUpdate2(...Package).then((arr)=>{
 //     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
 //     console.timeEnd('binary search on path chains');
 // });
-// listUpdate([['react-use','10.0.0']],'throttle-debounce','3.0.1').then((arr)=>{
+// }
+// if(x==1){
+// listUpdate(getDependentsByYarn(Package[0]),...Package).then((arr)=>{
 //     arr.forEach(item=> console.log(`update ${item[0]} to ${item[1]}`));
 //     console.timeEnd('binary search on full graph');
-//});
-}
-doo();
+// });
+// }
+// }
+// doo(2);
+
 
     
