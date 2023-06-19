@@ -18,13 +18,11 @@ function removePrefix(version){
 }
 //***********************************************************************************************************************************//
 function getDependencyPaths(packageName) {
-  const command = `yarn why ${packageName} `;
+  const command = `/Users/pradipkumar.singh/Desktop/project/node_modules/yarn/bin/./yarn why ${packageName} `;
   let output = execSync(command, { encoding: 'utf-8' });
   output=output.trim();
   const lines = output.split('\n');
   const allDependencyPaths = [];
-
-  let currentReason = null;
   for (let line of lines) {
     line = line.trim();
     
@@ -162,17 +160,16 @@ async function mainfun(rootPackageName,rootPackageVersion,dependencyName,depende
 
 
 async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersion){
+    return new Promise (async (resolve,reject)=>{
     let promiseList = mainPackages.map((item)=>
         mainfun(item[0],item[1],dependencyName,dependencyDestinationVersion)
     );
     Promise.all(promiseList).then((versions)=>{
        
-        versions.forEach((item,indx)=>{
-            console.log(`upgrade ${mainPackages[indx][0]} to ${item}`)});
-
-        })
+        resolve(versions.map((item,idx)=>[mainPackages[idx][0],item]));
+    })
         
-    }
+    })}
     // let mainPackages=[['react-use','10.0.0']];//[ [package1-Name,package1-Version] , [package2-Name,version2-Version] , [package3-Name,package3-version] ];
     // listUpdate(mainPackages,'throttle-debounce','3.0.1');  
     // import fs from 'fs';
@@ -214,11 +211,12 @@ async function updateThis(thisPackage,Child,reqVersion){
     let childVersions_inv=new Map();
     thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
     childVersions.forEach((item,idx)=>childVersions_inv.set(item,idx));
-    let bit=1<<15 , thisIdx=thisVersions.length-1,last=childVersions.length-1;
+    let bit=1<<15 , thisIdx=thisVersions.length-1,last=childVersions[childVersions.length-1];
     while(bit>1){
         if(thisIdx-bit>=0){
             let thisDirectDependencies=await getDirectDependencies(thisPackage,thisVersions[thisIdx-bit]);
             thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${Child}`);
+            if(thisDirectDependencies.length)
             if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
                 thisIdx-=bit;
                 last=thisDirectDependencies[0][1];
@@ -228,15 +226,17 @@ async function updateThis(thisPackage,Child,reqVersion){
     bit/=2;
     }
     if(Number(childVersions_inv.get(last))>=Number(childVersions_inv.get(reqVersion))){
-        return last;
+        return thisVersions[thisIdx];
     }
     else return '-1';
 
 }
 async function listUpdate2(packageName,packageDestinationVersion){
+    return new Promise((resolve,reject)=>{
     let dependencyPaths=getDependencyPaths(packageName);
     dependencyPaths=dependencyPaths.map((item)=>item.reverse());
     let Destinations=new Map();
+    let upgrading=[];
     dependencyPaths.forEach(async(thisPath)=>{
         let currChild = "",reqVersion ="";
         let flag=1;
@@ -260,10 +260,109 @@ async function listUpdate2(packageName,packageDestinationVersion){
 
         }
         if(flag)
-        console.log(`update ${currChild} to ${reqVersion}`);    
+        upgrading.push([currChild,reqVersion]);
+        else reject();
+    }) 
+    resolve(upgrading);
     })
-}    
-listUpdate2('throttle-debounce','3.0.1');
+}  
+async function updateThis3(thisPackage,currChild,reqVersion){
+    let [thisVersions,childVersions]=await Promise.all([getver(thisPackage),getver(currChild)]);
+    let thisVersions_inv=new Map();
+    let childVersions_inv=new Map();
+    thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
+    childVersions.forEach((item,idx)=>childVersions_inv.set(item,idx));
+    let major="",minor="",patch="",valid=0,last="",lastv="";
+
+    for(let item of thisVersions){
+        item=item.split('.');
+        
+        if(`${item[0]}`!=`${last}`){
+            last=`${item[0]}`;
+            let thisDirectDependencies = await getDirectDependencies(thisPackage,item.join('.'));
+            thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${currChild}`)
+            if(thisDirectDependencies.length)
+            if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
+            [major,minor,patch]=item;   
+                break;
+            }
+        }
+    }
     
-    
+    thisVersions=thisVersions.reverse();
+    for(let item of thisVersions){
+        item=item.split('.');
+        if(`${item[0]}`==`${major}`){
+            valid=1;
+
+        }
+        else if(valid){
+            let thisDirectDependencies = await getDirectDependencies(thisPackage,item.join('.'));
+            thisDirectDependencies=thisDirectDependencies.filter((item)=>`${item[0]}`==`${currChild}`)
+            if(Number(childVersions_inv.get(thisDirectDependencies[0][1]))>=Number(childVersions_inv.get(reqVersion))){
+                [major,minor,patch]=item;
+            }
+            else break;
+        }
+    }
+    return [major,minor,patch].join('.');
+
+}
+async function listUpdate3(packageName,packageDestinationVersion){
+    return new Promise(async (resolve,reject)=>{
+    let dependencyPaths=getDependencyPaths(packageName),upgrading=[];
+    dependencyPaths=dependencyPaths.map((item)=>item.reverse());
+    dependencyPaths.forEach(async(thisPath)=>{
+        let currChild = "",reqVersion ="";
+        let flag=1;
+
+        for(let thisPackage of thisPath){
+            if(`${currChild}`==""){
+                currChild=packageName;
+                reqVersion=packageDestinationVersion;
+            }
+            else{
+                let thisVersion=await updateThis3(thisPackage,currChild,reqVersion);
+                if(`${thisVersion}`==`-1`){
+                    console.log(`not possible via the following path: ${thisPath}`);
+                    flag=0;
+                    break;
+                }
+                else{
+                    currChild=thisPackage;
+                    reqVersion=thisVersion;   
+                }
+            } 
+
+        }
+        if(flag)
+        upgrading.push([currChild,reqVersion]);  
+        else reject();  
+    })
+    resolve(upgrading);
+})
+
+
+}  
+async function doo(){
+    console.time('linear search on path chains');
+    console.time('binary search on path chains');
+    console.time('binary search on full graph');
+// listUpdate3('throttle-debounce','2.0.1').then((arr)=>{
+//     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
+//     console.timeEnd('linear search on path chains');
+// });
+// listUpdate2('throttle-debounce','2.0.1').then((arr)=>{
+//     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
+//     console.timeEnd('binary search on path chains');
+// });
+// listUpdate([['react-use','10.0.0']],'throttle-debounce','3.0.1').then((arr)=>{
+//     arr.forEach(item=> console.log(`update ${item[0]} to ${item[1]}`));
+//     console.timeEnd('binary search on full graph');
+//});
+}
+doo();
+ //binary search on full graph: 12.445s
+ //binary search on path chains: 539.628ms
+ //linear search on path chains: 464.916ms
     
