@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import getETA from './getETA.js'
+const getETA = require('./getETA')
 
 describe('getETA', () => {
   it('should get the ETA remaining based on a fileProgress object', () => {

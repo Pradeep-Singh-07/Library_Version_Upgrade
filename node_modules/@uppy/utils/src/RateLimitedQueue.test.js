@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import { RateLimitedQueue } from './RateLimitedQueue.js'
+const RateLimitedQueue = require('./RateLimitedQueue')
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 

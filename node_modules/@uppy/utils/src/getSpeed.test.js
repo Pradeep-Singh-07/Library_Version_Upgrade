@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import getSpeed from './getSpeed.js'
+const getSpeed = require('./getSpeed')
 
 describe('getSpeed', () => {
   it('should calculate the speed given a fileProgress object', () => {

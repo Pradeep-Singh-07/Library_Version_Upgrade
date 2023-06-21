@@ -1,0 +1,15 @@
+{
+  "name": "scrolltop",
+  "version": "0.0.1",
+  "description": "get the window's scrolltop value.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/yields/scrolltop.git"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yields/scrolltop/issues"
+  }
+}

@@ -1,138 +1,50 @@
+var fs = require('fs');
+
 module.exports = function(grunt) {
 
-    var compileType = function() {
-            var type = this.data.type;
-            var template = grunt.file.read('templates/types.js');
-            var anon = grunt.file.read('templates/anon.js');
-            var files =  grunt.file.expand([
-                'src/' + type + '/*.js'
-            ]);
-            var regexp = /\}\(this, function \(numeral\) \{\s([\s\S]+)(?:\s\}\)\);)/;
-            var content = '';
-            var file;
-            var i;
-
-            for (i = 0; i < files.length; i++) {
-                file = grunt.file.read(files[i]);
-
-                content += '\n' + grunt.template.process(anon, {
-                    data: {
-                        content: file.match(regexp)[1]
-                    }
-                }) + '\n';
-            }
-
-            grunt.file.write('temp/' + type + '.js', content);
-
-            if (type === 'locales') {
-                grunt.file.write('locales.js', grunt.template.process(template, {
-                    data: {
-                        type: type,
-                        content: content
-                    }
-                }));
-            }
-        },
-        compileNumeral = function() {
-            var regexp = /([\s])return numeral;(?:\s\}\)\);)/;
-            var numeral = grunt.file.read('src/numeral.js');
-            var formats = grunt.file.read('temp/formats.js');
-            var index = numeral.indexOf('return numeral;');
-
-            numeral = numeral.substr(0, index) + '\n' + formats + numeral.substr(index);
-
-            grunt.file.write('numeral.js', numeral);
+    var minifiedFiles = {
+            'min/numeral.min.js' : [
+                'numeral.js'
+            ],
+            'min/languages.min.js': [
+                'languages.js'
+            ]
         };
 
-    require('load-grunt-tasks')(grunt);
+    // all the lang files need to be added manually
+    fs.readdirSync('./languages').forEach(function (path) {
+        var file = path.slice(0, -3),
+            destination = 'min/languages/' + file + '.min.js',
+            src = ['languages/' + path];
+
+        minifiedFiles[destination] = src;
+    });
 
     grunt.initConfig({
-        mochaTest : {
-            all: [
-                'tests/numeral.js',
-                'tests/formats/*.js',
-                'tests/locales/*.js'
-            ]
-        },
-        karma: {
-            options: {
-                files: [
-                    'numeral.js',
-                    'locales.js',
-                    'tests/numeral.js',
-                    'tests/formats/*.js',
-                    'tests/locales/*.js'
-                ],
-                frameworks: [
-                    'mocha',
-                    'chai'
-                ],
-                singleRun: true,
-                autoWatch: false
-            },
-            local: {
-                browsers: [
-                    'Chrome',
-                    'Firefox'
-                ]
-            },
-            ci: {
-                configFile: 'karma-ci.conf.js'
-            }
-        },
-        copy: {
-            locales: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src/',
-                        src: [
-                            'locales/*.js'
-                        ],
-                        dest: './'
-                    }
-                ]
-            }
-        },
-        compile: {
-            locales: {
-                type: 'locales'
-            },
-            formats: {
-                type: 'formats'
-            }
+        nodeunit : {
+            all : ['tests/**/*.js']
         },
         uglify: {
-            min: {
-                files: [
-                    {
-                        expand: true,
-                        cwd: 'src/',
-                        src: [
-                            'locales/*.js'
-                        ],
-                        dest: 'min/',
-                        ext: '.min.js'
-                    },
-                    {
-                        expand: true,
-                        src: [
-                            'numeral.js',
-                            'locales.js'
-                        ],
-                        dest: 'min/',
-                        ext: '.min.js'
-                    }
-                ]
+            my_target: {
+                files: minifiedFiles
             },
             options: {
                 preserveComments: 'some'
             }
         },
+        concat: {
+            languages: {
+                src: [
+                    'languages/**/*.js'
+                ],
+                dest: 'languages.js'
+            }
+        },
         jshint: {
             all: [
                 'Gruntfile.js',
-                'src/**/*.js'
+                'numeral.js',
+                'languages/**/*.js'
             ],
             options: {
                 'node': true,
@@ -143,117 +55,37 @@ module.exports = function(grunt) {
                 'eqnull': true,
                 'newcap': true,
                 'noarg': true,
+                'onevar': true,
                 'undef': true,
                 'sub': true,
                 'strict': false,
-                'quotmark': 'single',
-                'globals': {
-                    'define': true
-                }
+                'quotmark': 'single'
             }
         }
     });
+
+    grunt.loadNpmTasks('grunt-contrib-nodeunit');
+    grunt.loadNpmTasks('grunt-contrib-uglify');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks('grunt-contrib-concat');
 
     grunt.registerTask('default', [
         'test'
     ]);
 
-    grunt.registerMultiTask('compile', compileType);
+    grunt.registerTask('test', [
+        'jshint',
+        'nodeunit'
+    ]);
 
-    grunt.registerTask('compile:numeral', compileNumeral);
-
+    // P
     grunt.registerTask('build', [
         'jshint',
-        'compile',
-        'compile:numeral',
-        'copy'
-    ]);
-
-    grunt.registerTask('test', [
-        'build',
-        'mochaTest',
-        'karma:local'
-    ]);
-
-    grunt.registerTask('test:npm', [
-        'build',
-        'mochaTest'
-    ]);
-
-    grunt.registerTask('test:browser', [
-        'build',
-        'karma:local'
-    ]);
-
-    grunt.registerTask('dist', [
-        'build',
+        'nodeunit',
+        'concat',
         'uglify'
     ]);
 
-    grunt.registerTask('version', function (version) {
-        if (!version || version.split('.').length !== 3) {
-            grunt.fail.fatal('malformed version. Use\n\n    grunt version:1.2.3');
-        }
-
-        grunt.config('string-replace.json', {
-            files: {
-                'package.json': 'package.json',
-                'component.json': 'component.json',
-                'bower.json': 'bower.json'
-            },
-            options: {
-                replacements: [
-                    {
-                        pattern: /"version": .*/,
-                        replacement: '"version": "' + version + '",'
-                    }
-                ]
-            }
-        });
-
-        grunt.config('string-replace.numeral', {
-            files: {
-                'src/numeral.js': 'src/numeral.js'
-            },
-            options: {
-                replacements: [
-                    {
-                        pattern: /version : .*/,
-                        replacement: 'version : ' + version
-                    },
-                    {
-                        pattern: /VERSION = .*/,
-                        replacement: 'VERSION = \'' + version + '\','
-                    }
-                ]
-            }
-        });
-
-        grunt.config('string-replace.templates', {
-            files: {
-                'templates/types.js': 'templates/types.js'
-            },
-            options: {
-                replacements: [
-                    {
-                        pattern: /: .*/,
-                        replacement: ': ' + version
-                    }
-                ]
-            }
-        });
-
-        grunt.task.run([
-            'string-replace:json',
-            'string-replace:templates',
-            'string-replace:numeral'
-        ]);
-    });
-
     // Travis CI task.
-    grunt.registerTask('travis', [
-        'build',
-        'mochaTest',
-        'karma:ci'
-    ]);
+    grunt.registerTask('travis', ['test']);
 };

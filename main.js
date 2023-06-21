@@ -1,24 +1,56 @@
-import { directDependency , extractVersions } from './api_calls.js';
+import { directDependency , extractVersions ,getPackageInfo} from './api_calls.js';
 import { getDependencyPaths } from './yarn_why_parsing.js';
 let dependencyCache=new Map();
 let versionCache=new Map();
+let setInfoApiCache=new Map();
+let setInfoCache = new Map();
 function stringify(array){
     return array.join('@#$%');
 }
 function destringify(string){
     return string.split('@#$%');
 }
+function getDependentsByYarn(packageName){
+    let dependents= getDependencyPaths(packageName);
+    return dependents.map(item => [item[0]]);
+} 
+async function getSetApiPromise(packageName){
+    if(!setInfoApiCache.has(`${packageName}`)){
+        setInfoApiCache.set(`${packageName}`,getPackageInfo(packageName)); 
+    }
+    return setInfoApiCache.get(`${packageName}`);
+}
+async function getSetPromise(packageName,packageInfo){
+    if(!setInfoCache.has(`${packageName}`)){
+        setInfoCache.set(`${packageName}`,new Promise((resolve,reject)=>{
+            let versions=[];
+            packageInfo.forEach(([version,dependencies])=>{
+                versions.push(version);
+                dependencyCache.set(stringify([packageName,version]),dependencies);
+            })
+            versionCache.set(`${packageName}`,versions);
+            resolve();
+        }))
+    }
+    return setInfoCache.get(`${packageName}`);
+}
+async function set_info(packageName){
+    return new Promise(async(resolve,reject)=>{
+    let packageInfo=await getSetApiPromise(packageName);
+    await getSetPromise(packageName,packageInfo);
+    resolve();
+})
+
+}
 //***************************************************************************************************************************************//
 async function getDirectDependencies(packageName,packageVersion){   
     return new Promise(async (resolve,reject)=>{
     let Package=[packageName,packageVersion];
-    if(dependencyCache.has(stringify(Package))){
-
-        resolve(dependencyCache.get(stringify(Package)));
-    }
-    let result = await directDependency(packageName,packageVersion);
-    dependencyCache.set(stringify(Package),result);
-    resolve(result);
+    if(!dependencyCache.has(stringify(Package))){
+        await set_info(packageName);
+        
+    } 
+    resolve([...(dependencyCache.get(stringify(Package)))]);
     })  
 }
 async function getAllDependencies(packageName,packageVersion){
@@ -38,25 +70,17 @@ async function getAllDependencies(packageName,packageVersion){
     resolve([...alldependencies].map((item)=>destringify(item)));})
 }
 async function getver(packageName){
-
     return new Promise(async (resolve,reject)=>{
-       
-        if(versionCache.has(`${packageName}`)){
-            resolve (versionCache.get(`${packageName}`));
+        
+        if(!versionCache.has(`${packageName}`)){
+           await set_info(packageName);
+           
         }
-        else{
-        let out= await extractVersions(packageName);  
-        
-        
-        versionCache.set(`${packageName}`,out);
-        
-      
-        resolve(out); 
-        } 
-    })
+        resolve (versionCache.get(`${packageName}`));        
+})
 }
-
-async function mainfun(rootPackageName,rootPackageVersion,dependencyName,dependencyDestinationVersion){
+//*************************************************************************************************************************************************//
+async function updateThis(rootPackageName,rootPackageVersion,dependencyName,dependencyDestinationVersion){
     let rootPackageVersions = await getver(rootPackageName);
     let dependencyVersions = await getver(dependencyName);
     let inverseRootPackageVersions =new Map();
@@ -90,13 +114,12 @@ async function mainfun(rootPackageName,rootPackageVersion,dependencyName,depende
         }   
     }
 }
-//*************************************************************************************************************************************************//
 async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersion){
    
     return new Promise (async (resolve,reject)=>{
 
     let promiseList = mainPackages.map((item)=>
-        mainfun(item[0],item[1],dependencyName,dependencyDestinationVersion)
+        updateThis(item[0],item[1],dependencyName,dependencyDestinationVersion)
     );
     Promise.all(promiseList).then((versions)=>{      
          resolve(versions.map((item,idx)=>[mainPackages[idx][0],item]));
@@ -104,8 +127,8 @@ async function listUpdate(mainPackages,dependencyName,dependencyDestinationVersi
         
     })}
 //**********************************************************************************************************************************************//
-async function updateThis(thisPackage,Child,reqVersion){
-    let [thisVersions,childVersions]=await Promise.all([getver(thisPackage),getver(Child)]);
+async function updateThis2(thisPackage,Child,reqVersion){
+    let [ thisVersions , childVersions ] = await Promise.all([getver(thisPackage),getver(Child)]);
     let thisVersions_inv=new Map();
     let childVersions_inv=new Map();
     thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
@@ -147,7 +170,7 @@ async function listUpdate2(packageName,packageDestinationVersion){
                 reqVersion=packageDestinationVersion;
             }
             else{
-                let thisVersion=await updateThis(thisPackage,currChild,reqVersion);
+                let thisVersion=await updateThis2(thisPackage,currChild,reqVersion);
                 if(`${thisVersion}`==`-1`){
                     console.log(`not possible via the following path: ${thisPath}`);
                     flag=0;
@@ -166,15 +189,10 @@ async function listUpdate2(packageName,packageDestinationVersion){
     }))).then((item)=>resolve(item)); 
     })
 }  
+//**********************************************************************************************************************************************//
 async function updateThis3(thisPackage,currChild,reqVersion){
     
-    let thisVersions  = [...(await getver(thisPackage))];
-    let childVersions =[...(await getver(currChild))];
-
-    
-    
-    
-
+    let [thisVersions ,childVersions ] = (await( Promise.all([getver(thisPackage),  getver(currChild)]))).map((item)=>[...item]);
     let thisVersions_inv=new Map();
     let childVersions_inv=new Map();
     thisVersions.forEach((item,idx)=>thisVersions_inv.set(item,idx));
@@ -253,34 +271,31 @@ async function listUpdate3(packageName,packageDestinationVersion){
 
 
 }
-function getDependentsByYarn(packageName){
-    let dependents= getDependencyPaths(packageName);
-    return dependents.map(item => [item[0]]);
-}  
-// let Package=['leven','4.0.0'];
-// async function doo(x){
-//     console.time('linear search on path chains');
-//     console.time('binary search on path chains');
-//     console.time('binary search on full graph');
-// if(x==3){
-// listUpdate3(...Package).then((arr)=>{
-//     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
-//     console.timeEnd('linear search on path chains');
-// });}
-// if(x==2){
-// listUpdate2(...Package).then((arr)=>{
-//     arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
-//     console.timeEnd('binary search on path chains');
-// });
-// }
-// if(x==1){
-// listUpdate(getDependentsByYarn(Package[0]),...Package).then((arr)=>{
-//     arr.forEach(item=> console.log(`update ${item[0]} to ${item[1]}`));
-//     console.timeEnd('binary search on full graph');
-// });
-// }
-// }
-// doo(3);
+let Package=['semver','7.2.0'];
+async function doo(x){
+    console.time('linear search on path chains');
+    console.time('binary search on path chains');
+    console.time('binary search on full graph');
+if(x==3){
+listUpdate3(...Package).then((arr)=>{
+    arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
+    console.timeEnd('linear search on path chains');
+});}
+if(x==2){
+listUpdate2(...Package).then((arr)=>{
+    arr.forEach((item)=> console.log(`update ${item[0]} to ${item[1]}`));
+    console.timeEnd('binary search on path chains');
+});
+}
+if(x==1){
+listUpdate(getDependentsByYarn(Package[0]),...Package).then((arr)=>{
+    arr.forEach(item=> console.log(`update ${item[0]} to ${item[1]}`));
+    console.timeEnd('binary search on full graph');
+});
+}
+}
+doo(2);
+
 
 
 

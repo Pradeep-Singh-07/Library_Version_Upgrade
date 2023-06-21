@@ -1,4 +1,4 @@
-export default function settle (promises) {
+module.exports = function settle (promises) {
   const resolutions = []
   const rejections = []
   function resolved (value) {
@@ -9,7 +9,7 @@ export default function settle (promises) {
   }
 
   const wait = Promise.all(
-    promises.map((promise) => promise.then(resolved, rejected)),
+    promises.map((promise) => promise.then(resolved, rejected))
   )
 
   return wait.then(() => {

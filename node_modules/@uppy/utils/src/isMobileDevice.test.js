@@ -1,9 +1,8 @@
-import { describe, expect, it } from '@jest/globals'
-import isMobileDevice from './isMobileDevice.js'
+const isMobileDevice = require('./isMobileDevice')
 
 let fakeUserAgent = null
 
-Object.defineProperty(globalThis.navigator, 'userAgent', {
+Object.defineProperty(global.navigator, 'userAgent', {
   get () {
     return fakeUserAgent
   },

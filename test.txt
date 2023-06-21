@@ -11,7 +11,7 @@ update react-dropzone to 11.6.0
 update react-player to 2.12.0
 update react-virtualized to 9.22.5
 update react-overlays to 5.2.1
-update apollo-upload-client to 17.0.0
+update apollo-upload-client to 17.
 update react-scripts to 5.0.1
 linear search on path chains: 1:38.939 (m:ss.mmm)
 

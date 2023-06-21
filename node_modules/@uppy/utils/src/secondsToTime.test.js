@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import secondsToTime from './secondsToTime.js'
+const secondsToTime = require('./secondsToTime')
 
 describe('secondsToTime', () => {
   it('converts seconds to an { hours, minutes, seconds } object', () => {

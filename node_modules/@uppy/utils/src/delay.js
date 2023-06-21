@@ -1,4 +1,4 @@
-import { createAbortError } from './AbortController.js'
+const { createAbortError } = require('./AbortController')
 
 /**
  * Return a Promise that resolves after `ms` milliseconds.
@@ -7,26 +7,30 @@ import { createAbortError } from './AbortController.js'
  * @param {{ signal?: AbortSignal }} [opts] - An abort signal that can be used to cancel the delay early.
  * @returns {Promise<void>} A Promise that resolves after the given amount of `ms`.
  */
-export default function delay (ms, opts) {
+module.exports = function delay (ms, opts) {
   return new Promise((resolve, reject) => {
-    if (opts?.signal?.aborted) {
+    if (opts && opts.signal && opts.signal.aborted) {
       return reject(createAbortError())
     }
 
+    function onabort () {
+      clearTimeout(timeout)
+      cleanup()
+      reject(createAbortError())
+    }
+
     const timeout = setTimeout(() => {
-      cleanup() // eslint-disable-line no-use-before-define
+      cleanup()
       resolve()
     }, ms)
 
-    function onabort () {
-      clearTimeout(timeout)
-      cleanup() // eslint-disable-line no-use-before-define
-      reject(createAbortError())
+    if (opts && opts.signal) {
+      opts.signal.addEventListener('abort', onabort)
     }
-    opts?.signal?.addEventListener('abort', onabort)
     function cleanup () {
-      opts?.signal?.removeEventListener('abort', onabort)
+      if (opts && opts.signal) {
+        opts.signal.removeEventListener('abort', onabort)
+      }
     }
-    return undefined
   })
 }

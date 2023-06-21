@@ -1,66 +1,4 @@
-import has from './hasProperty.js'
-
-function insertReplacement (source, rx, replacement) {
-  const newParts = []
-  source.forEach((chunk) => {
-    // When the source contains multiple placeholders for interpolation,
-    // we should ignore chunks that are not strings, because those
-    // can be JSX objects and will be otherwise incorrectly turned into strings.
-    // Without this condition we’d get this: [object Object] hello [object Object] my <button>
-    if (typeof chunk !== 'string') {
-      return newParts.push(chunk)
-    }
-
-    return rx[Symbol.split](chunk).forEach((raw, i, list) => {
-      if (raw !== '') {
-        newParts.push(raw)
-      }
-
-      // Interlace with the `replacement` value
-      if (i < list.length - 1) {
-        newParts.push(replacement)
-      }
-    })
-  })
-  return newParts
-}
-
-/**
- * Takes a string with placeholder variables like `%{smart_count} file selected`
- * and replaces it with values from options `{smart_count: 5}`
- *
- * @license https://github.com/airbnb/polyglot.js/blob/master/LICENSE
- * taken from https://github.com/airbnb/polyglot.js/blob/master/lib/polyglot.js#L299
- *
- * @param {string} phrase that needs interpolation, with placeholders
- * @param {object} options with values that will be used to replace placeholders
- * @returns {any[]} interpolated
- */
-function interpolate (phrase, options) {
-  const dollarRegex = /\$/g
-  const dollarBillsYall = '$$$$'
-  let interpolated = [phrase]
-
-  if (options == null) return interpolated
-
-  for (const arg of Object.keys(options)) {
-    if (arg !== '_') {
-      // Ensure replacement value is escaped to prevent special $-prefixed
-      // regex replace tokens. the "$$$$" is needed because each "$" needs to
-      // be escaped with "$" itself, and we need two in the resulting output.
-      let replacement = options[arg]
-      if (typeof replacement === 'string') {
-        replacement = dollarRegex[Symbol.replace](replacement, dollarBillsYall)
-      }
-      // We create a new `RegExp` each time instead of using a more-efficient
-      // string replace so that the same argument can be replaced multiple times
-      // in the same phrase.
-      interpolated = insertReplacement(interpolated, new RegExp(`%\\{${arg}\\}`, 'g'), replacement)
-    }
-  }
-
-  return interpolated
-}
+const has = require('./hasProperty')
 
 /**
  * Translates strings with interpolation & pluralization support.
@@ -73,7 +11,7 @@ function interpolate (phrase, options) {
  *
  * Usage example: `translator.translate('files_chosen', {smart_count: 3})`
  */
-export default class Translator {
+module.exports = class Translator {
   /**
    * @param {object|Array<object>} locales - locale or list of locales.
    */
@@ -89,20 +27,81 @@ export default class Translator {
     }
 
     if (Array.isArray(locales)) {
-      locales.forEach(this.#apply, this)
+      locales.forEach((locale) => this._apply(locale))
     } else {
-      this.#apply(locales)
+      this._apply(locales)
     }
   }
 
-  #apply (locale) {
-    if (!locale?.strings) {
+  _apply (locale) {
+    if (!locale || !locale.strings) {
       return
     }
 
     const prevLocale = this.locale
     this.locale = { ...prevLocale, strings: { ...prevLocale.strings, ...locale.strings } }
     this.locale.pluralize = locale.pluralize || prevLocale.pluralize
+  }
+
+  /**
+   * Takes a string with placeholder variables like `%{smart_count} file selected`
+   * and replaces it with values from options `{smart_count: 5}`
+   *
+   * @license https://github.com/airbnb/polyglot.js/blob/master/LICENSE
+   * taken from https://github.com/airbnb/polyglot.js/blob/master/lib/polyglot.js#L299
+   *
+   * @param {string} phrase that needs interpolation, with placeholders
+   * @param {object} options with values that will be used to replace placeholders
+   * @returns {any[]} interpolated
+   */
+  interpolate (phrase, options) {
+    const { split, replace } = String.prototype
+    const dollarRegex = /\$/g
+    const dollarBillsYall = '$$$$'
+    let interpolated = [phrase]
+
+    for (const arg in options) {
+      if (arg !== '_' && has(options, arg)) {
+        // Ensure replacement value is escaped to prevent special $-prefixed
+        // regex replace tokens. the "$$$$" is needed because each "$" needs to
+        // be escaped with "$" itself, and we need two in the resulting output.
+        var replacement = options[arg]
+        if (typeof replacement === 'string') {
+          replacement = replace.call(options[arg], dollarRegex, dollarBillsYall)
+        }
+        // We create a new `RegExp` each time instead of using a more-efficient
+        // string replace so that the same argument can be replaced multiple times
+        // in the same phrase.
+        interpolated = insertReplacement(interpolated, new RegExp(`%\\{${arg}\\}`, 'g'), replacement)
+      }
+    }
+
+    return interpolated
+
+    function insertReplacement (source, rx, replacement) {
+      const newParts = []
+      source.forEach((chunk) => {
+        // When the source contains multiple placeholders for interpolation,
+        // we should ignore chunks that are not strings, because those
+        // can be JSX objects and will be otherwise incorrectly turned into strings.
+        // Without this condition we’d get this: [object Object] hello [object Object] my <button>
+        if (typeof chunk !== 'string') {
+          return newParts.push(chunk)
+        }
+
+        split.call(chunk, rx).forEach((raw, i, list) => {
+          if (raw !== '') {
+            newParts.push(raw)
+          }
+
+          // Interlace with the `replacement` value
+          if (i < list.length - 1) {
+            newParts.push(replacement)
+          }
+        })
+      })
+      return newParts
+    }
   }
 
   /**
@@ -134,11 +133,11 @@ export default class Translator {
     if (hasPluralForms) {
       if (options && typeof options.smart_count !== 'undefined') {
         const plural = this.locale.pluralize(options.smart_count)
-        return interpolate(string[plural], options)
+        return this.interpolate(string[plural], options)
       }
       throw new Error('Attempted to use a string with plural forms, but no value was given for %{smart_count}')
     }
 
-    return interpolate(string, options)
+    return this.interpolate(string, options)
   }
 }

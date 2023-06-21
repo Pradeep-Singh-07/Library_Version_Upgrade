@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import getBytesRemaining from './getBytesRemaining.js'
+const getBytesRemaining = require('./getBytesRemaining')
 
 describe('getBytesRemaining', () => {
   it('should calculate the bytes remaining given a fileProgress object', () => {

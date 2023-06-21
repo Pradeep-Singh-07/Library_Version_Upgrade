@@ -1,5 +1,9 @@
-export default function isPreviewSupported (fileType) {
+module.exports = function isPreviewSupported (fileType) {
   if (!fileType) return false
+  const fileTypeSpecific = fileType.split('/')[1]
   // list of images that browsers can preview
-  return /^[^/]+\/(jpe?g|gif|png|svg|svg\+xml|bmp|webp|avif)$/.test(fileType)
+  if (/^(jpe?g|gif|png|svg|svg\+xml|bmp|webp|avif)$/.test(fileTypeSpecific)) {
+    return true
+  }
+  return false
 }

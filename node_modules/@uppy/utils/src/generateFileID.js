@@ -1,15 +1,3 @@
-function encodeCharacter (character) {
-  return character.charCodeAt(0).toString(32)
-}
-
-function encodeFilename (name) {
-  let suffix = ''
-  return name.replace(/[^A-Z0-9]/ig, (character) => {
-    suffix += `-${encodeCharacter(character)}`
-    return '/'
-  }) + suffix
-}
-
 /**
  * Takes a file object and turns it into fileID, by converting file.name to lowercase,
  * removing extra characters and adding type, size and lastModified
@@ -17,7 +5,7 @@ function encodeFilename (name) {
  * @param {object} file
  * @returns {string} the fileID
  */
-export default function generateFileID (file) {
+module.exports = function generateFileID (file) {
   // It's tempting to do `[items].filter(Boolean).join('-')` here, but that
   // is slower! simple string concatenation is fast
 
@@ -42,4 +30,16 @@ export default function generateFileID (file) {
   }
 
   return id
+}
+
+function encodeFilename (name) {
+  let suffix = ''
+  return name.replace(/[^A-Z0-9]/ig, (character) => {
+    suffix += `-${encodeCharacter(character)}`
+    return '/'
+  }) + suffix
+}
+
+function encodeCharacter (character) {
+  return character.charCodeAt(0).toString(32)
 }

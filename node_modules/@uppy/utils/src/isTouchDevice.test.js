@@ -1,24 +1,23 @@
-import { afterEach, beforeEach, describe, expect, xit } from '@jest/globals'
-import isTouchDevice from './isTouchDevice.js'
+const isTouchDevice = require('./isTouchDevice')
 
 describe('isTouchDevice', () => {
-  const RealTouchStart = globalThis.window.ontouchstart
-  const RealMaxTouchPoints = globalThis.navigator.maxTouchPoints
+  const RealTouchStart = global.window.ontouchstart
+  const RealMaxTouchPoints = global.navigator.maxTouchPoints
 
   beforeEach(() => {
-    globalThis.window.ontouchstart = true
-    globalThis.navigator.maxTouchPoints = 1
+    global.window.ontouchstart = true
+    global.navigator.maxTouchPoints = 1
   })
 
   afterEach(() => {
-    globalThis.navigator.maxTouchPoints = RealMaxTouchPoints
-    globalThis.window.ontouchstart = RealTouchStart
+    global.navigator.maxTouchPoints = RealMaxTouchPoints
+    global.window.ontouchstart = RealTouchStart
   })
 
   xit("should return true if it's a touch device", () => {
     expect(isTouchDevice()).toEqual(true)
-    delete globalThis.window.ontouchstart
-    globalThis.navigator.maxTouchPoints = false
+    delete global.window.ontouchstart
+    global.navigator.maxTouchPoints = false
     expect(isTouchDevice()).toEqual(false)
   })
 })

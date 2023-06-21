@@ -1,9 +1,9 @@
-import NetworkError from './NetworkError.js'
+const NetworkError = require('./NetworkError')
 
 /**
  * Wrapper around window.fetch that throws a NetworkError when appropriate
  */
-export default function fetchWithNetworkError (...options) {
+module.exports = function fetchWithNetworkError (...options) {
   return fetch(...options)
     .catch((err) => {
       if (err.name === 'AbortError') {

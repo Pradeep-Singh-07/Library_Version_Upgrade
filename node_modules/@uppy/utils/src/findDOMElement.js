@@ -1,4 +1,4 @@
-import isDOMElement from './isDOMElement.js'
+const isDOMElement = require('./isDOMElement')
 
 /**
  * Find a DOM element.
@@ -6,7 +6,7 @@ import isDOMElement from './isDOMElement.js'
  * @param {Node|string} element
  * @returns {Node|null}
  */
-export default function findDOMElement (element, context = document) {
+module.exports = function findDOMElement (element, context = document) {
   if (typeof element === 'string') {
     return context.querySelector(element)
   }
@@ -14,6 +14,4 @@ export default function findDOMElement (element, context = document) {
   if (isDOMElement(element)) {
     return element
   }
-
-  return null
 }

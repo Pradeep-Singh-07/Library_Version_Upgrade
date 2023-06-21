@@ -1,4 +1,6 @@
 /**
  * Converts list into array
  */
-export default Array.from
+module.exports = function toArray (list) {
+  return Array.prototype.slice.call(list || [], 0)
+}

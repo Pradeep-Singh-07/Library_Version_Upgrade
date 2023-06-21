@@ -4,6 +4,6 @@
  * @param {string} url
  * @returns {boolean}
  */
-export default function isObjectURL (url) {
-  return url.startsWith('blob:')
+module.exports = function isObjectURL (url) {
+  return url.indexOf('blob:') === 0
 }

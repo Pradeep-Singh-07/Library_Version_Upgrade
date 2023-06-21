@@ -4,7 +4,7 @@
  *
  * @returns {boolean}
  */
-export default function isMobileDevice () {
+module.exports = function isMobileDevice () {
   if (typeof window !== 'undefined'
       && window.navigator
       && window.navigator.userAgent

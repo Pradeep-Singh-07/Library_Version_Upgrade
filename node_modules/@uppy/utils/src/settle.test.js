@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import settle from './settle.js'
+const settle = require('./settle')
 
 describe('settle', () => {
   it('should resolve even if all input promises reject', async () => {
@@ -7,7 +6,7 @@ describe('settle', () => {
       settle([
         Promise.reject(new Error('oops')),
         Promise.reject(new Error('this went wrong')),
-      ]),
+      ])
     ).resolves.toMatchObject({
       successful: [],
       failed: [new Error('oops'), new Error('this went wrong')],
@@ -20,7 +19,7 @@ describe('settle', () => {
         Promise.reject(new Error('rejected')),
         Promise.resolve('resolved'),
         Promise.resolve('also-resolved'),
-      ]),
+      ])
     ).resolves.toMatchObject({
       successful: ['resolved', 'also-resolved'],
       failed: [new Error('rejected')],

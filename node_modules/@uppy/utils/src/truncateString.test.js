@@ -1,5 +1,4 @@
-import { describe, expect, it } from '@jest/globals'
-import truncateString from './truncateString.js'
+const truncateString = require('./truncateString')
 
 describe('truncateString', () => {
   it('should truncate the string to the length', () => {
@@ -13,15 +12,20 @@ describe('truncateString', () => {
     expect(truncateString('abcdefghijkl', 7)).toEqual('ab...kl')
     expect(truncateString('abcdefghijkl', 6)).toEqual('ab...l')
     expect(truncateString('abcdefghijkl', 5)).toEqual('a...l')
-    expect(truncateString('abcdefghijkl', 4)).toEqual('abc…')
-    expect(truncateString('abcdefghijkl', 3)).toEqual('ab…')
-    expect(truncateString('abcdefghijkl', 2)).toEqual('a…')
-    expect(truncateString('abcdefghijkl', 1)).toEqual('…')
+    expect(truncateString('abcdefghijkl', 4)).toEqual('a...')
+    expect(truncateString('abcdefghijkl', 3)).toEqual('abc')
+    expect(truncateString('abcdefghijkl', 2)).toEqual('ab')
+    expect(truncateString('abcdefghijkl', 1)).toEqual('a')
     expect(truncateString('abcdefghijkl', 0)).toEqual('')
   })
 
   it('should not truncate the string if it is already short enough', () => {
     expect(truncateString('hello world', 100)).toEqual('hello world')
     expect(truncateString('hello world', 11)).toEqual('hello world')
+  })
+
+  it('should not truncate the string if it is too short to be meaningfully truncated', () => {
+    expect(truncateString('abc', 2)).toEqual('ab')
+    expect(truncateString('abc', 1)).toEqual('a')
   })
 })

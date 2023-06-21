@@ -1,6 +1,6 @@
-import getFileNameAndExtension from './getFileNameAndExtension.js'
+const getFileNameAndExtension = require('./getFileNameAndExtension')
 
-export default function remoteFileObjToLocal (file) {
+module.exports = function remoteFileObjToLocal (file) {
   return {
     ...file,
     type: file.mimeType,
